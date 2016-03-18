@@ -1,0 +1,356 @@
+
+CS 313E: Bulko
+Programming Assignment 6:
+Process Scheduler
+Due Date: Mar. 25, 11:59 pm
+
+In computing, a process is an instance of a computer program that is being executed. You start a new process whenever you open a software application (MS Word, iTunes, FireFox, Steam, etc.). You iMessage your friend, keeping iTunes running, and at the same time you work on your CS313E homework in IDLE. Does this sounds familiar? To the user, it appears as if we are running many software instances at the same time, although your computer will slow down dramatically if you just keep opening additional applications. In reality, your computer has limited resources (no matter how many cores your processor has) and all processes take turns sharing the same processor. How do we get this "illusion" of running many programs in parallel? It is the job of the computer's operating system (MS Windows, MacOS, Linux, etc.) to schedule these processes so that all the processes can share the CPU and respond in a timely manner.
+
+Computer scientists have explored many different policies for scheduling processes. Modern opeating systems use a variation of a multilevel feedback queue. The fundamental design principles of this scheduling algorithm are:
+
+    Give preference to short jobs.
+    Give preference to I/O-bound processes, processes whose runtime is governed by the need to read data from a file or network, or to generate output. (Processes doing a lot of input or output actually do not demand a lot of CPU effort, because no calculation is involved.)
+    Separate processes into categories based on their need for the processor; that is, put processes into different queues of different priorities just like the ERsim.
+
+The algorithm makes use of multiple FIFO (first-in first-out) queues to organize processes waiting to be executed. A new process is always inserted at the back of the highest-priority queue. The CPU is assigned to the process currently at the front of the queue.
+
+    If the process completely finishes executing within the time slice of the given queue, it terminates (leaves the system).
+    If the process uses up all the time allocated in its time slice, it is pre-empted, meaning the processor places it on "pause" and moves it to a lower priority queue to be continued later.
+    If the process reaches a point in its time slice where it needs to perform I/O, it is said to "block" for I/O, and the processor places it on "pause" and moves it to a higher priority queue to be continued later (unless it is already in the highest priority queue, in which case it's added to the back of the queue.
+
+In this assignment, you will write classes Node, Queue and Process to simulate a process scheduler. Your scheduler will have three levels of queues with assigned time slices of 10 ms, 100 ms, and 1000 ms respectively. For simplicity, we will assume that all the processes are submitted for execution at the same time, and no new processes will be introduced later.
+
+Input:
+
+Each line of the data file will be in the format "process_id;duration;[io_time_stamp,io_time_stamp,...]", where there can be multiple values for io_time_stamp listed in the square brackets.
+
+    process_id is a unique identification number for a process.
+    duration is the total time needed to run this process.
+    io_time_stamp is a time stamp when the process blocks for I/O during its execution.
+
+The input for your program will look like the following:
+
+
+13326;20;[3,5,15,17]
+13327;100;[13,60,80]
+13328;50;[]
+13329;60;[5,15,17,50]
+13330;70;[30,42,50]
+13331;1000;[100,200,600,715]
+13332;5;[]
+13333;100;[30,42,55,72,90]
+13334;6000;[100,310,400,1000,2300,4000,4200,5000,5100]
+13345;20;[2,7,9,10,11,18]
+
+We assume that it takes no time for these processes to do I/O.
+
+Output:
+
+Your program should create a schedule for running these processes. Your output will look like the following:
+
+Resulting schedule:
+  P13326(3) -> P13327(10) -> P13328(10) -> P13329(5) -> P13330(10) ->
+  P13331(10) -> P13332(5) -> P13333(10) -> P13334(10) -> P13345(2) ->
+  P13326(2) -> P13329(10) -> P13345(5) -> P13326(10) -> P13345(2) ->
+  P13345(1) -> P13345(1) -> P13345(9) -> P13327(90) -> P13328(40) ->
+  P13330(60) -> P13331(90) -> P13331(10) -> P13333(90) -> P13334(90) ->
+  P13334(10) -> P13329(45) -> P13326(5) -> P13331(90) -> P13331(10) ->
+  P13334(100) -> P13331(100) -> P13334(100) -> P13334(90) -> P13334(10) ->
+  P13334(100) -> P13331(690) -> P13334(490) -> P13334(100) -> P13334(1000) ->
+  P13334(200) -> P13334(100) -> P13334(1000) -> P13334(600) -> P13334(100) ->
+  P13334(100) -> P13334(100) -> P13334(700) -> P13334(100) -> P13334(900) ->
+
+Each process should be printed as "P" followed by its process ID, followed by the time it ran for the current slice of time. You'll find an example output of helpful debugging information at the end of this page.
+
+You may find the "eval()" function useful for reading in data.
+
+Your main program might look like the following:
+
+def main():
+
+  fh = open("Processes.txt","r")
+  process_list = []
+  scheduler = Scheduler()
+
+  for line in fh:
+    data = line.strip().split(";")
+    process_list.append(Process(int(data[0]),int(data[1]),eval(data[2])))
+
+  scheduler.takeProcesses(process_list)
+  scheduler.run()
+
+General requirements:
+
+    You must submit a file called Scheduler.py via Canvas by the deadline shown at the top of this page.
+    As always, I will be looking for good documentation, descriptive variable names, clean logical structure, and adherence to all coding conventions expected of an experienced programmer; there will be penalties for failure to meet these standards.
+    Your code must compile and run before submission.
+    Don't forget to include the header (as described in previous assignments)!
+
+Sample output with debugging information:
+
+start scheduling..
+top level: [P13326]->[P13327]->[P13328]->[P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]
+mid level:
+bot level:
+Running P13326
+P13326 blocked for I/O
+top level: [P13327]->[P13328]->[P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]
+mid level:
+bot level:
+Running P13327
+P13327 is pre-empted
+top level: [P13328]->[P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]
+mid level: [P13327]
+bot level:
+Running P13328
+P13328 is pre-empted
+top level: [P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]
+mid level: [P13327]->[P13328]
+bot level:
+Running P13329
+P13329 blocked for I/O
+top level: [P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]->[P13329]
+mid level: [P13327]->[P13328]
+bot level:
+Running P13330
+P13330 is pre-empted
+top level: [P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]->[P13329]
+mid level: [P13327]->[P13328]->[P13330]
+bot level:
+Running P13331
+P13331 is pre-empted
+top level: [P13332]->[P13333]->[P13334]->[P13345]->[P13326]->[P13329]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]
+bot level:
+Running P13332
+P13332 finished
+top level: [P13333]->[P13334]->[P13345]->[P13326]->[P13329]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]
+bot level:
+Running P13333
+P13333 is pre-empted
+top level: [P13334]->[P13345]->[P13326]->[P13329]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]
+bot level:
+Running P13334
+P13334 is pre-empted
+top level: [P13345]->[P13326]->[P13329]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+Running P13345
+P13345 blocked for I/O
+top level: [P13326]->[P13329]->[P13345]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+Running P13326
+P13326 blocked for I/O
+top level: [P13329]->[P13345]->[P13326]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+Running P13329
+P13329 is pre-empted
+top level: [P13345]->[P13326]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]
+bot level:
+Running P13345
+P13345 blocked for I/O
+top level: [P13326]->[P13345]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]
+bot level:
+Running P13326
+P13326 is pre-empted
+top level: [P13345]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+bot level:
+Running P13345
+P13345 blocked for I/O
+top level: [P13345]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+bot level:
+Running P13345
+P13345 blocked for I/O
+top level: [P13345]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+bot level:
+Running P13345
+P13345 blocked for I/O
+top level: [P13345]
+mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+bot level:
+Running P13345
+P13345 finished
+top level:
+mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+bot level:
+Running P13327
+P13327 finished
+top level:
+mid level: [P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+bot level:
+Running P13328
+P13328 finished
+top level:
+mid level: [P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+bot level:
+Running P13330
+P13330 finished
+top level:
+mid level: [P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+bot level:
+Running P13331
+P13331 blocked for I/O
+top level: [P13331]
+mid level: [P13333]->[P13334]->[P13329]->[P13326]
+bot level:
+Running P13331
+P13331 is pre-empted
+top level:
+mid level: [P13333]->[P13334]->[P13329]->[P13326]->[P13331]
+bot level:
+Running P13333
+P13333 finished
+top level:
+mid level: [P13334]->[P13329]->[P13326]->[P13331]
+bot level:
+Running P13334
+P13334 blocked for I/O
+top level: [P13334]
+mid level: [P13329]->[P13326]->[P13331]
+bot level:
+Running P13334
+P13334 is pre-empted
+top level:
+mid level: [P13329]->[P13326]->[P13331]->[P13334]
+bot level:
+Running P13329
+P13329 finished
+top level:
+mid level: [P13326]->[P13331]->[P13334]
+bot level:
+Running P13326
+P13326 finished
+top level:
+mid level: [P13331]->[P13334]
+bot level:
+Running P13331
+P13331 blocked for I/O
+top level: [P13331]
+mid level: [P13334]
+bot level:
+Running P13331
+P13331 is pre-empted
+top level:
+mid level: [P13334]->[P13331]
+bot level:
+Running P13334
+P13334 is pre-empted
+top level:
+mid level: [P13331]
+bot level: [P13334]
+Running P13331
+P13331 is pre-empted
+top level:
+mid level:
+bot level: [P13334]->[P13331]
+Running P13334
+P13334 blocked for I/O
+top level:
+mid level: [P13334]
+bot level: [P13331]
+Running P13334
+P13334 blocked for I/O
+top level: [P13334]
+mid level:
+bot level: [P13331]
+Running P13334
+P13334 is pre-empted
+top level:
+mid level: [P13334]
+bot level: [P13331]
+Running P13334
+P13334 is pre-empted
+top level:
+mid level:
+bot level: [P13331]->[P13334]
+Running P13331
+P13331 finished
+top level:
+mid level:
+bot level: [P13334]
+Running P13334
+P13334 blocked for I/O
+top level:
+mid level: [P13334]
+bot level:
+Running P13334
+P13334 is pre-empted
+top level:
+mid level:
+bot level: [P13334]
+Running P13334
+P13334 is pre-empted
+top level:
+mid level:
+bot level: [P13334]
+Running P13334
+P13334 blocked for I/O
+top level:
+mid level: [P13334]
+bot level:
+Running P13334
+P13334 is pre-empted
+top level:
+mid level:
+bot level: [P13334]
+Running P13334
+P13334 is pre-empted
+top level:
+mid level:
+bot level: [P13334]
+Running P13334
+P13334 blocked for I/O
+top level:
+mid level: [P13334]
+bot level:
+Running P13334
+P13334 is pre-empted
+top level:
+mid level:
+bot level: [P13334]
+Running P13334
+P13334 blocked for I/O
+top level:
+mid level: [P13334]
+bot level:
+Running P13334
+P13334 is pre-empted
+top level:
+mid level:
+bot level: [P13334]
+Running P13334
+P13334 blocked for I/O
+top level:
+mid level: [P13334]
+bot level:
+Running P13334
+P13334 is pre-empted
+top level:
+mid level:
+bot level: [P13334]
+Running P13334
+P13334 finished
+top level:
+mid level:
+bot level:
+Total Time used to run:  7425
+Resulting schedule:
+  P13326(3) -> P13327(10) -> P13328(10) -> P13329(5) -> P13330(10) ->
+  P13331(10) -> P13332(5) -> P13333(10) -> P13334(10) -> P13345(2) ->
+  P13326(2) -> P13329(10) -> P13345(5) -> P13326(10) -> P13345(2) ->
+  P13345(1) -> P13345(1) -> P13345(9) -> P13327(90) -> P13328(40) ->
+  P13330(60) -> P13331(90) -> P13331(10) -> P13333(90) -> P13334(90) ->
+  P13334(10) -> P13329(45) -> P13326(5) -> P13331(90) -> P13331(10) ->
+  P13334(100) -> P13331(100) -> P13334(100) -> P13334(90) -> P13334(10) ->
+  P13334(100) -> P13331(690) -> P13334(490) -> P13334(100) -> P13334(1000) ->
+  P13334(200) -> P13334(100) -> P13334(1000) -> P13334(600) -> P13334(100) ->
+  P13334(100) -> P13334(100) -> P13334(700) -> P13334(100) -> P13334(900) ->
