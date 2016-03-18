@@ -20,11 +20,11 @@ class Scheduler(object):
         print("Add:", process)
 
     def run(self):
-        print("___________ Processes Start Running ___________")
+        print("\n___________ Processes Start Running ___________")
 
         while(not(self.top.isEmpty() and self.mid.isEmpty() and self.bot.isEmpty())):
-            #Show which process will be analyzed and the current status of the queue
-            self.showQueue()
+            #Show which process will be analyzed
+            print("\nRunning", self.peek())
 
             #Starting with the Top level, if not empty
             if(not(self.top.isEmpty())):
@@ -38,7 +38,11 @@ class Scheduler(object):
             elif(not(self.bot.isEmpty())):
                 self.proc(3)
 
+            #Show current status of the Queue
+            self.showQueue()
+
         #Display the historical scheduling from the first one to the last one
+        print("\n___________ Final Scheduling ___________")
         print(self.scheduling)
 
     def proc(self, id):
@@ -72,9 +76,16 @@ class Scheduler(object):
                 self.mid.add(proc_curr)
             else:
                 self.bot.add(proc_curr)
-            print(str(proc_curr) +"blocked for I/O")
+
+            #Displays process' current state
+            print(str(proc_curr) +" is pre-empted")
+
+        #Time requested fits into time alloted
         else:
+            #Document the historical scheduling
             self.scheduling.append(str(proc_curr) +"(" +str(time_left) +")")
+
+            #If the process still need additional time, put back at the end of the Queue
             if(not(proc_curr.isEmpty())):
                 if(id == 1):
                     self.top.add(proc_curr)
@@ -82,7 +93,9 @@ class Scheduler(object):
                     self.mid.add(proc_curr)
                 elif(id == 3):
                     self.bot.add(proc_curr)
-                print(str(proc_curr) +"is pre-empted")
+                print(str(proc_curr) +" blocked for I/O")
+            else:
+                print(str(proc_curr) +" finished")
 
     def peek(self):
         if(not(self.top.isEmpty())):
@@ -94,7 +107,6 @@ class Scheduler(object):
         return ""
 
     def showQueue(self):
-        print("\nRunning", self.peek())
         print(self.top)
         print(self.mid)
         print(self.bot)
@@ -134,7 +146,7 @@ class Queue(object):
         self.queue.append(obj)
 
     def peek(self):
-        return(self.queue[0])
+        return(str(self.queue[0]))
 
     def pop(self):
         return(self.queue.pop(0))
@@ -173,6 +185,7 @@ def main():
   src = open(".\Processes.txt", "r")
   sc = Scheduler()
 
+  print("___________ Processes Start Adding ___________")
   for line in src:
     data = line.strip().split(";")
     sc.add(Process(int(data[0]), int(data[1]), eval(data[2])))
