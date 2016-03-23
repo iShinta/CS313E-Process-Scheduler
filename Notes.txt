@@ -16,7 +16,7 @@ The algorithm makes use of multiple FIFO (first-in first-out) queues to organize
 
     If the process completely finishes executing within the time slice of the given queue, it terminates (leaves the system).
     If the process uses up all the time allocated in its time slice, it is pre-empted, meaning the processor places it on "pause" and moves it to a lower priority queue to be continued later.
-    If the process reaches a point in its time slice where it needs to perform I/O, it is said to "block" for I/O, and the processor places it on "pause" and moves it to a higher priority queue to be continued later (unless it is already in the highest priority queue, in which case it's added to the back of the queue.
+    If the process reaches a point in its time slice where it needs to perform I/O, it is said to "block" for I/O, and the processor places it on "pause" and moves it to a higher priority queue to be continued later (unless it is already in the highest priority queue, in which case it's added to the back of the queue).
 
 In this assignment, you will write classes Node, Queue and Process to simulate a process scheduler. Your scheduler will have three levels of queues with assigned time slices of 10 ms, 100 ms, and 1000 ms respectively. For simplicity, we will assume that all the processes are submitted for execution at the same time, and no new processes will be introduced later.
 
@@ -48,17 +48,24 @@ Output:
 
 Your program should create a schedule for running these processes. Your output will look like the following:
 
-Resulting schedule:
-  P13326(3) -> P13327(10) -> P13328(10) -> P13329(5) -> P13330(10) ->
-  P13331(10) -> P13332(5) -> P13333(10) -> P13334(10) -> P13345(2) ->
-  P13326(2) -> P13329(10) -> P13345(5) -> P13326(10) -> P13345(2) ->
-  P13345(1) -> P13345(1) -> P13345(9) -> P13327(90) -> P13328(40) ->
-  P13330(60) -> P13331(90) -> P13331(10) -> P13333(90) -> P13334(90) ->
-  P13334(10) -> P13329(45) -> P13326(5) -> P13331(90) -> P13331(10) ->
-  P13334(100) -> P13331(100) -> P13334(100) -> P13334(90) -> P13334(10) ->
-  P13334(100) -> P13331(690) -> P13334(490) -> P13334(100) -> P13334(1000) ->
-  P13334(200) -> P13334(100) -> P13334(1000) -> P13334(600) -> P13334(100) ->
-  P13334(100) -> P13334(100) -> P13334(700) -> P13334(100) -> P13334(900) ->
+Resulted schedule:
+->P13326(3)->P13327(10)->P13328(10)->P13329(5)->P13330(10)
+->P13331(10)->P13332(5)->P13333(10)->P13334(10)->P13345(2)
+->P13326(2)->P13329(10)->P13345(5)->P13326(10)->P13329(2)
+->P13345(2)->P13326(2)->P13329(10)->P13345(1)->P13326(3)
+->P13345(1)->P13345(7)->P13345(2)->P13327(3)->P13327(10)
+->P13328(40)->P13330(20)->P13330(10)->P13331(90)->P13331(10)
+->P13333(20)->P13333(10)->P13334(90)->P13334(10)->P13329(23)
+->P13329(10)->P13327(37)->P13327(10)->P13330(2)->P13330(8)
+->P13330(10)->P13331(90)->P13331(10)->P13333(2)->P13333(10)
+->P13334(100)->P13327(10)->P13327(10)->P13330(10)->P13331(100)
+->P13333(3)->P13333(10)->P13327(10)->P13333(7)->P13333(10)
+->P13333(8)->P13333(10)->P13334(100)->P13334(90)->P13334(10)
+->P13334(100)->P13331(290)->P13331(100)->P13334(490)->P13334(100)
+->P13331(15)->P13331(100)->P13334(1000)->P13331(185)->P13334(200)
+->P13334(100)->P13334(1000)->P13334(600)->P13334(100)->P13334(100)
+->P13334(100)->P13334(700)->P13334(100)->P13334(10)->P13334(100)
+->P13334(790)
 
 Each process should be printed as "P" followed by its process ID, followed by the time it ran for the current slice of time. You'll find an example output of helpful debugging information at the end of this page.
 
@@ -88,269 +95,432 @@ General requirements:
 
 Sample output with debugging information:
 
+
 start scheduling..
-top level: [P13326]->[P13327]->[P13328]->[P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]
+top level: ->[P13326]->[P13327]->[P13328]->[P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]
 mid level:
 bot level:
-Running P13326
+1. Running P13326
 P13326 blocked for I/O
-top level: [P13327]->[P13328]->[P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]
+top level: ->[P13327]->[P13328]->[P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]
 mid level:
 bot level:
-Running P13327
+2. Running P13327
 P13327 is pre-empted
-top level: [P13328]->[P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]
-mid level: [P13327]
+top level: ->[P13328]->[P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]
+mid level: ->[P13327]
 bot level:
-Running P13328
+3. Running P13328
 P13328 is pre-empted
-top level: [P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]
-mid level: [P13327]->[P13328]
+top level: ->[P13329]->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]
+mid level: ->[P13327]->[P13328]
 bot level:
-Running P13329
+4. Running P13329
 P13329 blocked for I/O
-top level: [P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]->[P13329]
-mid level: [P13327]->[P13328]
+top level: ->[P13330]->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]->[P13329]
+mid level: ->[P13327]->[P13328]
 bot level:
 Running P13330
-P13330 is pre-empted
-top level: [P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]->[P13329]
-mid level: [P13327]->[P13328]->[P13330]
+5. P13330 is pre-empted
+top level: ->[P13331]->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]->[P13329]
+mid level: ->[P13327]->[P13328]->[P13330]
 bot level:
-Running P13331
+6. Running P13331
 P13331 is pre-empted
-top level: [P13332]->[P13333]->[P13334]->[P13345]->[P13326]->[P13329]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]
+top level: ->[P13332]->[P13333]->[P13334]->[P13345]->[P13326]->[P13329]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]
 bot level:
-Running P13332
+7. Running P13332
 P13332 finished
-top level: [P13333]->[P13334]->[P13345]->[P13326]->[P13329]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]
+top level: ->[P13333]->[P13334]->[P13345]->[P13326]->[P13329]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]
 bot level:
-Running P13333
+8. Running P13333
 P13333 is pre-empted
-top level: [P13334]->[P13345]->[P13326]->[P13329]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]
+top level: ->[P13334]->[P13345]->[P13326]->[P13329]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]
 bot level:
-Running P13334
+9. Running P13334
 P13334 is pre-empted
-top level: [P13345]->[P13326]->[P13329]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+top level: ->[P13345]->[P13326]->[P13329]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
 bot level:
-Running P13345
+10. Running P13345
 P13345 blocked for I/O
-top level: [P13326]->[P13329]->[P13345]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+top level: ->[P13326]->[P13329]->[P13345]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
 bot level:
-Running P13326
+11. Running P13326
 P13326 blocked for I/O
-top level: [P13329]->[P13345]->[P13326]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+top level: ->[P13329]->[P13345]->[P13326]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
 bot level:
-Running P13329
+12. Running P13329
+P13329 blocked for I/O
+top level: ->[P13345]->[P13326]->[P13329]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+13. Running P13345
+P13345 blocked for I/O
+top level: ->[P13326]->[P13329]->[P13345]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+14. Running P13326
+P13326 blocked for I/O
+top level: ->[P13329]->[P13345]->[P13326]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+15. Running P13329
+P13329 blocked for I/O
+top level: ->[P13345]->[P13326]->[P13329]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+16. Running P13345
+P13345 blocked for I/O
+top level: ->[P13326]->[P13329]->[P13345]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+17. Running P13326
+P13326 blocked for I/O
+top level: ->[P13329]->[P13345]->[P13326]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+18. Running P13329
 P13329 is pre-empted
-top level: [P13345]->[P13326]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]
+top level: ->[P13345]->[P13326]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]
 bot level:
-Running P13345
+19. Running P13345
 P13345 blocked for I/O
-top level: [P13326]->[P13345]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]
+top level: ->[P13326]->[P13345]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]
 bot level:
-Running P13326
-P13326 is pre-empted
-top level: [P13345]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+20. Running P13326
+P13326 finished
+top level: ->[P13345]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]
 bot level:
-Running P13345
+21. Running P13345
 P13345 blocked for I/O
-top level: [P13345]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+top level: ->[P13345]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]
 bot level:
-Running P13345
+22. Running P13345
 P13345 blocked for I/O
-top level: [P13345]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+top level: ->[P13345]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]
 bot level:
-Running P13345
-P13345 blocked for I/O
-top level: [P13345]
-mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
-bot level:
-Running P13345
+23. Running P13345
 P13345 finished
 top level:
-mid level: [P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+mid level: ->[P13327]->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]
 bot level:
-Running P13327
-P13327 finished
+24. Running P13327
+P13327 blocked for I/O
+top level: ->[P13327]
+mid level: ->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]
+bot level:
+25. Running P13327
+P13327 is pre-empted
 top level:
-mid level: [P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+mid level: ->[P13328]->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13327]
 bot level:
 Running P13328
 P13328 finished
 top level:
-mid level: [P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13326]
+mid level: ->[P13330]->[P13331]->[P13333]->[P13334]->[P13329]->[P13327]
 bot level:
+Running P13330
+P13330 blocked for I/O
+top level: ->[P13330]
+mid level: ->[P13331]->[P13333]->[P13334]->[P13329]->[P13327]
+bot level:
+Running P13330
+P13330 is pre-empted
+top level:
+mid level: ->[P13331]->[P13333]->[P13334]->[P13329]->[P13327]->[P13330]
+bot level:
+Running P13331
+P13331 blocked for I/O
+top level: ->[P13331]
+mid level: ->[P13333]->[P13334]->[P13329]->[P13327]->[P13330]
+bot level:
+Running P13331
+P13331 is pre-empted
+top level:
+mid level: ->[P13333]->[P13334]->[P13329]->[P13327]->[P13330]->[P13331]
+bot level:
+Running P13333
+P13333 blocked for I/O
+top level: ->[P13333]
+mid level: ->[P13334]->[P13329]->[P13327]->[P13330]->[P13331]
+bot level:
+Running P13333
+P13333 is pre-empted
+top level:
+mid level: ->[P13334]->[P13329]->[P13327]->[P13330]->[P13331]->[P13333]
+bot level:
+Running P13334
+P13334 blocked for I/O
+top level: ->[P13334]
+mid level: ->[P13329]->[P13327]->[P13330]->[P13331]->[P13333]
+bot level:
+Running P13334
+P13334 is pre-empted
+top level:
+mid level: ->[P13329]->[P13327]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+Running P13329
+P13329 blocked for I/O
+top level: ->[P13329]
+mid level: ->[P13327]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+Running P13329
+P13329 is pre-empted
+top level:
+mid level: ->[P13327]->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+Running P13327
+P13327 blocked for I/O
+top level: ->[P13327]
+mid level: ->[P13330]->[P13331]->[P13333]->[P13334]
+bot level:
+Running P13327
+P13327 is pre-empted
+top level:
+mid level: ->[P13330]->[P13331]->[P13333]->[P13334]->[P13327]
+bot level:
+Running P13330
+P13330 blocked for I/O
+top level: ->[P13330]
+mid level: ->[P13331]->[P13333]->[P13334]->[P13327]
+bot level:
+Running P13330
+P13330 blocked for I/O
+top level: ->[P13330]
+mid level: ->[P13331]->[P13333]->[P13334]->[P13327]
+bot level:
+Running P13330
+P13330 is pre-empted
+top level:
+mid level: ->[P13331]->[P13333]->[P13334]->[P13327]->[P13330]
+bot level:
+Running P13331
+P13331 blocked for I/O
+top level: ->[P13331]
+mid level: ->[P13333]->[P13334]->[P13327]->[P13330]
+bot level:
+Running P13331
+P13331 is pre-empted
+top level:
+mid level: ->[P13333]->[P13334]->[P13327]->[P13330]->[P13331]
+bot level:
+Running P13333
+P13333 blocked for I/O
+top level: ->[P13333]
+mid level: ->[P13334]->[P13327]->[P13330]->[P13331]
+bot level:
+Running P13333
+P13333 is pre-empted
+top level:
+mid level: ->[P13334]->[P13327]->[P13330]->[P13331]->[P13333]
+bot level:
+Running P13334
+P13334 is pre-empted
+top level:
+mid level: ->[P13327]->[P13330]->[P13331]->[P13333]
+bot level: ->[P13334]
+Running P13327
+P13327 blocked for I/O
+top level: ->[P13327]
+mid level: ->[P13330]->[P13331]->[P13333]
+bot level: ->[P13334]
+Running P13327
+P13327 is pre-empted
+top level:
+mid level: ->[P13330]->[P13331]->[P13333]->[P13327]
+bot level: ->[P13334]
 Running P13330
 P13330 finished
 top level:
-mid level: [P13331]->[P13333]->[P13334]->[P13329]->[P13326]
-bot level:
-Running P13331
-P13331 blocked for I/O
-top level: [P13331]
-mid level: [P13333]->[P13334]->[P13329]->[P13326]
-bot level:
+mid level: ->[P13331]->[P13333]->[P13327]
+bot level: ->[P13334]
 Running P13331
 P13331 is pre-empted
 top level:
-mid level: [P13333]->[P13334]->[P13329]->[P13326]->[P13331]
-bot level:
+mid level: ->[P13333]->[P13327]
+bot level: ->[P13334]->[P13331]
 Running P13333
-P13333 finished
+P13333 blocked for I/O
+top level: ->[P13333]
+mid level: ->[P13327]
+bot level: ->[P13334]->[P13331]
+Running P13333
+P13333 is pre-empted
 top level:
-mid level: [P13334]->[P13329]->[P13326]->[P13331]
-bot level:
+mid level: ->[P13327]->[P13333]
+bot level: ->[P13334]->[P13331]
+Running P13327
+P13327 finished
+top level:
+mid level: ->[P13333]
+bot level: ->[P13334]->[P13331]
+Running P13333
+P13333 blocked for I/O
+top level: ->[P13333]
+mid level:
+bot level: ->[P13334]->[P13331]
+Running P13333
+P13333 is pre-empted
+top level:
+mid level: ->[P13333]
+bot level: ->[P13334]->[P13331]
+Running P13333
+P13333 blocked for I/O
+top level: ->[P13333]
+mid level:
+bot level: ->[P13334]->[P13331]
+Running P13333
+P13333 is pre-empted
+top level:
+mid level:
+bot level: ->[P13334]->[P13331]
 Running P13334
 P13334 blocked for I/O
-top level: [P13334]
-mid level: [P13329]->[P13326]->[P13331]
-bot level:
+top level:
+mid level: ->[P13334]
+bot level: ->[P13331]
+Running P13334
+P13334 blocked for I/O
+top level: ->[P13334]
+mid level:
+bot level: ->[P13331]
 Running P13334
 P13334 is pre-empted
 top level:
-mid level: [P13329]->[P13326]->[P13331]->[P13334]
-bot level:
-Running P13329
-P13329 finished
+mid level: ->[P13334]
+bot level: ->[P13331]
+Running P13334
+P13334 is pre-empted
 top level:
-mid level: [P13326]->[P13331]->[P13334]
-bot level:
-Running P13326
-P13326 finished
-top level:
-mid level: [P13331]->[P13334]
-bot level:
+mid level:
+bot level: ->[P13331]->[P13334]
 Running P13331
 P13331 blocked for I/O
-top level: [P13331]
-mid level: [P13334]
-bot level:
-Running P13331
-P13331 is pre-empted
 top level:
-mid level: [P13334]->[P13331]
-bot level:
-Running P13334
-P13334 is pre-empted
-top level:
-mid level: [P13331]
-bot level: [P13334]
+mid level: ->[P13331]
+bot level: ->[P13334]
 Running P13331
 P13331 is pre-empted
 top level:
 mid level:
-bot level: [P13334]->[P13331]
+bot level: ->[P13334]->[P13331]
 Running P13334
 P13334 blocked for I/O
 top level:
-mid level: [P13334]
-bot level: [P13331]
-Running P13334
-P13334 blocked for I/O
-top level: [P13334]
-mid level:
-bot level: [P13331]
-Running P13334
-P13334 is pre-empted
-top level:
-mid level: [P13334]
-bot level: [P13331]
+mid level: ->[P13334]
+bot level: ->[P13331]
 Running P13334
 P13334 is pre-empted
 top level:
 mid level:
-bot level: [P13331]->[P13334]
+bot level: ->[P13331]->[P13334]
+Running P13331
+P13331 blocked for I/O
+top level:
+mid level: ->[P13331]
+bot level: ->[P13334]
+Running P13331
+P13331 is pre-empted
+top level:
+mid level:
+bot level: ->[P13334]->[P13331]
+Running P13334
+P13334 is pre-empted
+top level:
+mid level:
+bot level: ->[P13331]->[P13334]
 Running P13331
 P13331 finished
 top level:
 mid level:
-bot level: [P13334]
+bot level: ->[P13334]
 Running P13334
 P13334 blocked for I/O
 top level:
-mid level: [P13334]
+mid level: ->[P13334]
 bot level:
 Running P13334
 P13334 is pre-empted
 top level:
 mid level:
-bot level: [P13334]
+bot level: ->[P13334]
 Running P13334
 P13334 is pre-empted
 top level:
 mid level:
-bot level: [P13334]
+bot level: ->[P13334]
 Running P13334
 P13334 blocked for I/O
 top level:
-mid level: [P13334]
+mid level: ->[P13334]
 bot level:
 Running P13334
 P13334 is pre-empted
 top level:
 mid level:
-bot level: [P13334]
-Running P13334
-P13334 is pre-empted
-top level:
-mid level:
-bot level: [P13334]
+bot level: ->[P13334]
 Running P13334
 P13334 blocked for I/O
 top level:
-mid level: [P13334]
+mid level: ->[P13334]
 bot level:
 Running P13334
 P13334 is pre-empted
 top level:
 mid level:
-bot level: [P13334]
+bot level: ->[P13334]
 Running P13334
 P13334 blocked for I/O
 top level:
-mid level: [P13334]
+mid level: ->[P13334]
+bot level:
+Running P13334
+P13334 blocked for I/O
+top level: ->[P13334]
+mid level:
+bot level:
+Running P13334
+P13334 is pre-empted
+top level:
+mid level: ->[P13334]
 bot level:
 Running P13334
 P13334 is pre-empted
 top level:
 mid level:
-bot level: [P13334]
-Running P13334
-P13334 blocked for I/O
-top level:
-mid level: [P13334]
-bot level:
-Running P13334
-P13334 is pre-empted
-top level:
-mid level:
-bot level: [P13334]
+bot level: ->[P13334]
 Running P13334
 P13334 finished
 top level:
 mid level:
 bot level:
 Total Time used to run:  7425
-Resulting schedule:
-  P13326(3) -> P13327(10) -> P13328(10) -> P13329(5) -> P13330(10) ->
-  P13331(10) -> P13332(5) -> P13333(10) -> P13334(10) -> P13345(2) ->
-  P13326(2) -> P13329(10) -> P13345(5) -> P13326(10) -> P13345(2) ->
-  P13345(1) -> P13345(1) -> P13345(9) -> P13327(90) -> P13328(40) ->
-  P13330(60) -> P13331(90) -> P13331(10) -> P13333(90) -> P13334(90) ->
-  P13334(10) -> P13329(45) -> P13326(5) -> P13331(90) -> P13331(10) ->
-  P13334(100) -> P13331(100) -> P13334(100) -> P13334(90) -> P13334(10) ->
-  P13334(100) -> P13331(690) -> P13334(490) -> P13334(100) -> P13334(1000) ->
-  P13334(200) -> P13334(100) -> P13334(1000) -> P13334(600) -> P13334(100) ->
-  P13334(100) -> P13334(100) -> P13334(700) -> P13334(100) -> P13334(900) ->
+Resulted schedule:
+->P13326(3)->P13327(10)->P13328(10)->P13329(5)->P13330(10)
+->P13331(10)->P13332(5)->P13333(10)->P13334(10)->P13345(2)
+->P13326(2)->P13329(10)->P13345(5)->P13326(10)->P13329(2)
+->P13345(2)->P13326(2)->P13329(10)->P13345(1)->P13326(3)
+->P13345(1)->P13345(7)->P13345(2)->P13327(3)->P13327(10)
+->P13328(40)->P13330(20)->P13330(10)->P13331(90)->P13331(10)
+->P13333(20)->P13333(10)->P13334(90)->P13334(10)->P13329(23)
+->P13329(10)->P13327(37)->P13327(10)->P13330(2)->P13330(8)
+->P13330(10)->P13331(90)->P13331(10)->P13333(2)->P13333(10)
+->P13334(100)->P13327(10)->P13327(10)->P13330(10)->P13331(100)
+->P13333(3)->P13333(10)->P13327(10)->P13333(7)->P13333(10)
+->P13333(8)->P13333(10)->P13334(100)->P13334(90)->P13334(10)
+->P13334(100)->P13331(290)->P13331(100)->P13334(490)->P13334(100)
+->P13331(15)->P13331(100)->P13334(1000)->P13331(185)->P13334(200)
+->P13334(100)->P13334(1000)->P13334(600)->P13334(100)->P13334(100)
+->P13334(100)->P13334(700)->P13334(100)->P13334(10)->P13334(100)
+->P13334(790)
