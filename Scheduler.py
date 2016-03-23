@@ -21,10 +21,11 @@ class Scheduler(object):
 
     def run(self):
         print("\n___________ Processes Start Running ___________")
+        i = 1
 
         while(not(self.top.isEmpty() and self.mid.isEmpty() and self.bot.isEmpty())):
             #Show which process will be analyzed
-            print("\nRunning", self.peek())
+            print("\n" +str(i) +". Running", self.peek())
 
             #Starting with the Top level, if not empty
             if(not(self.top.isEmpty())):
@@ -40,6 +41,9 @@ class Scheduler(object):
 
             #Show current status of the Queue
             self.showQueue()
+
+            #Increment counter
+            i += 1
 
         #Display the historical scheduling from the first one to the last one
         print("\n___________ Final Scheduling ___________")
@@ -90,9 +94,9 @@ class Scheduler(object):
                 if(id == 1):
                     self.top.add(proc_curr)
                 elif(id == 2):
-                    self.mid.add(proc_curr)
+                    self.top.add(proc_curr)
                 elif(id == 3):
-                    self.bot.add(proc_curr)
+                    self.mid.add(proc_curr)
                 print(str(proc_curr) +" blocked for I/O")
             else:
                 print(str(proc_curr) +" finished")
@@ -112,10 +116,25 @@ class Scheduler(object):
         print(self.bot)
 
 class Node(object):
-    def __init__(self, list):
+    def __init__(self, list, duration):
         self.list = str(list).strip().lstrip("[").rstrip("]").split(",")
         if(self.list == ['']):
-            self.list = ['0']
+            self.list = [duration]
+        else:
+            self.list.append(str(duration))
+        self.list = self.convert(self.list)
+
+    def convert(self, list): #Question: Is list a copy or a reference to self.list?
+        res = []
+        res.append(int(list[0]))
+        i = 1
+
+        while(i < len(list)):
+            res.append(int(list[i]) - int(list[i-1]))
+            i += 1
+
+        print(res)
+        return res
 
     def add(self, time):
         self.list.insert(0, time)
@@ -163,11 +182,7 @@ class Queue(object):
 class Process(object):
     def __init__(self, id, duration, io_time_stamp):
         self.id = id
-        self.duration = duration
-        self.io_time_stamp = Node(io_time_stamp)
-        if(self.io_time_stamp.peek() == 0):
-            self.io_time_stamp.set(self.duration)
-
+        self.io_time_stamp = Node(io_time_stamp, duration)
 
     def __str__(self):
         return("P" +str(self.id))
